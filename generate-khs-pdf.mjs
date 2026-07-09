@@ -233,7 +233,7 @@ app.post('/api/webhook/planning-center', async (req, res) => {
     const mahasiswa = await Mahasiswa.findOneAndUpdate(
       { nim: nimDariForm },
       { is_khs_locked: false },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!mahasiswa) {

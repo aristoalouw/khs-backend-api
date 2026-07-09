@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 // --- 1. KONEKSI KE MONGO DB ATLAS ---
-const mongoURI = "mongodb://saintpaulsreview_db_user:RmtvDCOG9zF3HkTa@ac-zw4xosw-shard-00-00.rsx3ffs.mongodb.net:27017,ac-zw4xosw-shard-00-01.rsx3ffs.mongodb.net:27017,ac-zw4xosw-shard-00-02.rsx3ffs.mongodb.net:27017/?replicaSet=atlas-1tr85e-shard-0&ssl=true&authSource=admin";
+const mongoURI = "mongodb://saintpaulsreview_db_user:RmtvDCOG9zF3HkTa@ac-zw4xosw-shard-00-00.rsx3ffs.mongodb.net:27017,ac-zw4xosw-shard-00-01.rsx3ffs.mongodb.net:27017,ac-zw4xosw-shard-00-02.rsx3ffs.mongodb.net:27017/akademik_db?replicaSet=atlas-1tr85e-shard-0&ssl=true&authSource=admin";
 
 mongoose.connect(mongoURI)
   .then(() => console.log('Sukses Terhubung ke MongoDB Atlas Online!'))

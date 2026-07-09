@@ -213,23 +213,35 @@ app.post('/api/webhook/planning-center', async (req, res) => {
 // Menggunakan port dinamis dari hosting, jika tidak ada baru gunakan 3000
 const PORT = process.env.PORT || 3000;
 
-// --- 4. ENDPOINT WEBHOOK PLANNING CENTER ---
+// ==========================================
+// RUTE 1: UNTUK CETAK PDF (MENGGUNAKAN TEMPLATE)
+// ==========================================
+app.post('/api/cetak-khs', async (req, res) => {
+  try {
+    console.log("Memulai proses cetak PDF...");
+    // ... kode pembacaan Template_KHS_Kosong.pdf Anda ada di sini ...
+  } catch (error) {
+    console.error("Terjadi error pada proses PDF:", error); // <-- Ini yang memicu log Anda tadi!
+    return res.status(500).json({ message: "Gagal cetak PDF" });
+  }
+});
+
+// ==========================================
+// RUTE 2: UNTUK WEBHOOK PLANNING CENTER (HANYA UPDATE MONGODB)
+// ==========================================
 app.post('/api/webhook/planning-center', async (req, res) => {
   try {
     const payload = req.body;
-    console.log("Menerima data Webhook dari Planning Center:", payload);
+    console.log("Menerima data Webhook dari Planning Center:", JSON.stringify(payload));
 
-    // 1. Ambil data pengenal (misal: NIM atau Email) dari form Planning Center
-    // Catatan: Struktur payload (req.body) disesuaikan dengan format kiriman asli Planning Center.
-    // Di bawah ini adalah contoh mengambil NIM yang diinput mahasiswa di form:
-    const nimDariForm = payload.data?.attributes?.answers?.find(a => a.field_name === "NIM")?.value 
-                        || payload.mahasiswa?.nim; // Fallback jika tes manual
+    // Logika mengambil NIM dari payload form
+    let nimDariForm = payload?.data?.attributes?.answers?.find(a => a.field_name === "NIM")?.value;
 
     if (!nimDariForm) {
-      return res.status(400).json({ message: "NIM tidak ditemukan dalam data form." });
+      return res.status(200).json({ success: false, message: "NIM tidak ditemukan" });
     }
 
-    // 2. Cari mahasiswa di MongoDB Atlas dan buka kunci KHS-nya
+    // UPDATE DATABASE (Tanpa menyentuh file PDF sama sekali!)
     const mahasiswa = await Mahasiswa.findOneAndUpdate(
       { nim: nimDariForm },
       { is_khs_locked: false },
@@ -237,20 +249,14 @@ app.post('/api/webhook/planning-center', async (req, res) => {
     );
 
     if (!mahasiswa) {
-      console.log(`Webhook Gagal: Mahasiswa dengan NIM ${nimDariForm} tidak terdaftar di database.`);
-      return res.status(404).json({ message: "Mahasiswa tidak terdaftar di database akademik." });
+      return res.status(200).json({ success: false, message: "NIM tidak terdaftar di DB" });
     }
 
-    console.log(`Suksess! KHS untuk mahasiswa ${mahasiswa.nama} (${mahasiswa.nim}) SEKARANG TERBUKA.`);
-    
-    return res.status(200).json({ 
-      message: "Webhook berhasil diproses. KHS telah dibuka!",
-      mahasiswa: { nama: mahasiswa.nama, nim: mahasiswa.nim, is_khs_locked: mahasiswa.is_khs_locked }
-    });
+    return res.status(200).json({ success: true, message: "Gembok KHS terbuka!" });
 
   } catch (error) {
-    console.error("Error pada proses Webhook:", error);
-    return res.status(500).json({ message: "Internal Server Error pada Webhook." });
+    console.error("Error fatal pada proses Webhook:", error);
+    return res.status(500).json({ message: "Internal Server Error pada Webhook" });
   }
 });
 

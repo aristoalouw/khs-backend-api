@@ -219,6 +219,17 @@ const PORT = process.env.PORT || 3000;
 app.post('/api/cetak-khs', async (req, res) => {
   try {
     console.log("Memulai proses cetak PDF...");
+    // Ambil NIM dari request body
+    const { nim } = req.body.mahasiswa || {};
+
+    // KITA TAMBAHKAN .maxTimeMS(5000) DI SINI:
+    // Jika 5 detik database tidak merespons, proses akan langsung diputus dan melempar error
+    const dataMahasiswa = await Mahasiswa.findOne({ nim: nim }).maxTimeMS(5000);
+
+    if (!dataMahasiswa) {
+      console.log(`Cetak PDF Log: NIM ${nim} tidak ditemukan.`);
+      return res.status(404).json({ message: "Mahasiswa tidak terdaftar." });
+    }
     // ... kode pembacaan Template_KHS_Kosong.pdf Anda ada di sini ...
   } catch (error) {
     console.error("Terjadi error pada proses PDF:", error); // <-- Ini yang memicu log Anda tadi!

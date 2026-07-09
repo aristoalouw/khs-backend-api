@@ -72,7 +72,10 @@ app.post('/api/cetak-khs', async (req, res) => {
     console.log(`[CETAK KHS] Mengecek status gembok untuk NIM: "${nim}"`);
     
     // CEK DATABASE
-    const dataMahasiswaDb = await Mahasiswa.findOne({ nim: nim }).maxTimeMS(5000);
+    // CEK DATABASE (Bisa menerima format String maupun Angka murni)
+    const dataMahasiswaDb = await Mahasiswa.findOne({ 
+      nim: { $in: [nim, Number(nim)] } 
+    }).maxTimeMS(5000);
 
     // DEBUGGING DATABASE
     console.log(`[DEBUG] Hasil pencarian dari MongoDB untuk NIM "${nim}":`, dataMahasiswaDb);
@@ -229,11 +232,9 @@ app.post('/api/webhook/planning-center', async (req, res) => {
       return res.status(200).json({ success: false, message: "NIM tidak ditemukan dalam payload" });
     }
 
-    // PEMINDAIAN NIM EKSTRA AMAN
-    const nimDariForm = String(nimDariFormMentah).trim();
-
+ // UPDATE DATABASE (Bisa menerima format String maupun Angka murni)
     const mahasiswa = await Mahasiswa.findOneAndUpdate(
-      { nim: nimDariForm },
+      { nim: { $in: [nimDariForm, Number(nimDariForm)] } },
       { is_khs_locked: false },
       { returnDocument: 'after' }
     );

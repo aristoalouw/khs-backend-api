@@ -14,9 +14,22 @@ app.use(express.json());
 const mongoURI = "mongodb://saintpaulsreview_db_user:RmtvDCOG9zF3HkTa@ac-zw4xosw-shard-00-00.rsx3ffs.mongodb.net:27017,ac-zw4xosw-shard-00-01.rsx3ffs.mongodb.net:27017,ac-zw4xosw-shard-00-02.rsx3ffs.mongodb.net:27017/akademik_db?replicaSet=atlas-1tr85e-shard-0&ssl=true&authSource=admin";
 
 mongoose.connect(mongoURI, {
-    dbName: "akademik_db"
+  dbName: 'akademik_db' // Pastikan ini nama DB yang membawahi koleksi 'mahasiswa'
+})
+  .then(async () => {
+    console.log('=== KONEKSI MONGO OK! SEKARANG KITA INTIP SEISI RUMAHNYA ===');
+    
+    // 1. Cek nama database aktif saat ini
+    const currentDbName = mongoose.connection.db.databaseName;
+    console.log(`[PEMINDAI] Node.js saat ini aktif di database: "${currentDbName}"`);
+
+    // 2. Cek daftar koleksi yang ada di dalam database tersebut
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const collectionNames = collections.map(c => c.name);
+    console.log(`[PEMINDAI] Koleksi yang ditemukan di dalam DB "${currentDbName}":`, collectionNames);
+    
+    console.log('===========================================================');
   })
-  .then(() => console.log('Sukses Terhubung ke MongoDB Atlas Online!'))
   .catch((err) => console.error('Gagal koneksi ke MongoDB:', err));
 
 // --- 2. DEFINISI SCHEMA MAHASISWA ---

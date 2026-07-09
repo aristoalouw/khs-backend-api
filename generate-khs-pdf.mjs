@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { readFile } from 'fs/promises';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import fs from 'fs';
 import mongoose from 'mongoose'; // <-- PASTIKAN BARIS INI ADA DI ATAS!
 
 const app = express();

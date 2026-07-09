@@ -13,7 +13,9 @@ app.use(express.json());
 // PENTING: Ganti "NAMA_DATABASE_ANDA" dengan nama database yang benar sebelum tanda "?"
 const mongoURI = "mongodb://saintpaulsreview_db_user:RmtvDCOG9zF3HkTa@ac-zw4xosw-shard-00-00.rsx3ffs.mongodb.net:27017,ac-zw4xosw-shard-00-01.rsx3ffs.mongodb.net:27017,ac-zw4xosw-shard-00-02.rsx3ffs.mongodb.net:27017/akademik_db?replicaSet=atlas-1tr85e-shard-0&ssl=true&authSource=admin";
 
-mongoose.connect(mongoURI)
+mongoose.connect(mongoURI, {
+    dbName: "akademik_db"
+  })
   .then(() => console.log('Sukses Terhubung ke MongoDB Atlas Online!'))
   .catch((err) => console.error('Gagal koneksi ke MongoDB:', err));
 
@@ -220,31 +222,37 @@ app.post('/api/cetak-khs', async (req, res) => {
 // ==========================================
 // RUTE 2: WEBHOOK PLANNING CENTER (MEMBUKA GEMBOK)
 // ==========================================
+// ==========================================
+// RUTE 2: WEBHOOK PLANNING CENTER (MEMBUKA GEMBOK)
+// ==========================================
 app.post('/api/webhook/planning-center', async (req, res) => {
   try {
     const payload = req.body;
     console.log("[WEBHOOK] Menerima request masuk:", JSON.stringify(payload));
 
-    let nimDariFormMentah = payload?.data?.attributes?.answers?.find(a => a.field_name === "NIM")?.value;
+    let nimMentah = payload?.data?.attributes?.answers?.find(a => a.field_name === "NIM")?.value;
 
-    if (!nimDariFormMentah) {
+    if (!nimMentah) {
       console.log("[WEBHOOK] Payload ditolak: NIM tidak ditemukan.");
       return res.status(200).json({ success: false, message: "NIM tidak ditemukan dalam payload" });
     }
 
- // UPDATE DATABASE (Bisa menerima format String maupun Angka murni)
+    // Pastikan konversi ke String dan pembersihan spasi aman
+    const nimClean = String(nimMentah).trim();
+
+    // Query fleksibel mencari String maupun Number
     const mahasiswa = await Mahasiswa.findOneAndUpdate(
-      { nim: { $in: [nimDariForm, Number(nimDariForm)] } },
+      { nim: { $in: [nimClean, Number(nimClean)] } },
       { is_khs_locked: false },
       { returnDocument: 'after' }
     );
 
     if (!mahasiswa) {
-      console.log(`[WEBHOOK] NIM "${nimDariForm}" tidak ditemukan di database.`);
+      console.log(`[WEBHOOK] NIM "${nimClean}" tidak ditemukan di database.`);
       return res.status(200).json({ success: false, message: "NIM tidak terdaftar di DB" });
     }
 
-    console.log(`[WEBHOOK] SUKSES! Gembok dibuka untuk NIM: ${nimDariForm}`);
+    console.log(`[WEBHOOK] SUKSES! Gembok dibuka untuk NIM: ${nimClean}`);
     return res.status(200).json({ success: true, message: "Webhook berhasil, gembok KHS terbuka!" });
 
   } catch (error) {

@@ -213,6 +213,47 @@ app.post('/api/cetak-khs', async (req, res) => {
 // Menggunakan port dinamis dari hosting, jika tidak ada baru gunakan 3000
 const PORT = process.env.PORT || 3000;
 
+// --- 4. ENDPOINT WEBHOOK PLANNING CENTER ---
+app.post('/api/webhook/planning-center', async (req, res) => {
+  try {
+    const payload = req.body;
+    console.log("Menerima data Webhook dari Planning Center:", payload);
+
+    // 1. Ambil data pengenal (misal: NIM atau Email) dari form Planning Center
+    // Catatan: Struktur payload (req.body) disesuaikan dengan format kiriman asli Planning Center.
+    // Di bawah ini adalah contoh mengambil NIM yang diinput mahasiswa di form:
+    const nimDariForm = payload.data?.attributes?.answers?.find(a => a.field_name === "NIM")?.value 
+                        || payload.mahasiswa?.nim; // Fallback jika tes manual
+
+    if (!nimDariForm) {
+      return res.status(400).json({ message: "NIM tidak ditemukan dalam data form." });
+    }
+
+    // 2. Cari mahasiswa di MongoDB Atlas dan buka kunci KHS-nya
+    const mahasiswa = await Mahasiswa.findOneAndUpdate(
+      { nim: nimDariForm },
+      { is_khs_locked: false },
+      { new: true }
+    );
+
+    if (!mahasiswa) {
+      console.log(`Webhook Gagal: Mahasiswa dengan NIM ${nimDariForm} tidak terdaftar di database.`);
+      return res.status(404).json({ message: "Mahasiswa tidak terdaftar di database akademik." });
+    }
+
+    console.log(`Suksess! KHS untuk mahasiswa ${mahasiswa.nama} (${mahasiswa.nim}) SEKARANG TERBUKA.`);
+    
+    return res.status(200).json({ 
+      message: "Webhook berhasil diproses. KHS telah dibuka!",
+      mahasiswa: { nama: mahasiswa.nama, nim: mahasiswa.nim, is_khs_locked: mahasiswa.is_khs_locked }
+    });
+
+  } catch (error) {
+    console.error("Error pada proses Webhook:", error);
+    return res.status(500).json({ message: "Internal Server Error pada Webhook." });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server KHS berjalan di port ${PORT}`);
 });

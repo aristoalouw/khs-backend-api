@@ -57,7 +57,7 @@ function formatDecimal(value) {
 }
 
 // --- ENDPOINT API SERVER ---
-app.post('/api/cetak-khs', async (req, res) => {
+app.post('/api/webhook/planning-center', async (req, res) => {
   try {
     // 1. Mengambil data JSON dinamis yang dikirim dari tombol frontend
     const khsData = req.body;

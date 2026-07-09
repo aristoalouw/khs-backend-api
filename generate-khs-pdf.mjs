@@ -218,23 +218,37 @@ const PORT = process.env.PORT || 3000;
 // ==========================================
 app.post('/api/cetak-khs', async (req, res) => {
   try {
-    console.log("Memulai proses cetak PDF...");
-    // Ambil NIM dari request body
-    const { nim } = req.body.mahasiswa || {};
+    console.log("1. Memulai proses cetak PDF...");
+    const { nama, nim, prodi } = req.body.mahasiswa || {};
 
-    // KITA TAMBAHKAN .maxTimeMS(5000) DI SINI:
-    // Jika 5 detik database tidak merespons, proses akan langsung diputus dan melempar error
-    /* const dataMahasiswa = await Mahasiswa.findOne({ nim: nim }).maxTimeMS(5000);
+    // Bypass data untuk tes
+    const dataMahasiswa = {
+      nama: nama || "Alya Ramadhani",
+      nim: nim || "230401001",
+      prodi: prodi || "Teologi S1"
+    };
 
-    if (!dataMahasiswa) {
-      console.log(`Cetak PDF Log: NIM ${nim} tidak ditemukan.`);
-      return res.status(404).json({ message: "Mahasiswa tidak terdaftar." });
-    }
-      */
-    // ... kode pembacaan Template_KHS_Kosong.pdf Anda ada di sini ...
+    console.log("2. Mulai membaca file Template_KHS_Kosong.pdf...");
+    // Pastikan pakai await di sini!
+    const templateBytes = await fs.promises.readFile('Template_KHS_Kosong.pdf');
+
+    console.log("3. Membuka dokumen dengan PDF-Lib...");
+    const pdfDoc = await PDFDocument.load(templateBytes);
+
+    console.log("4. Mengisi teks ke dalam template...");
+    // === (KODE PENGISIAN TEKS / FORM ANDA DI SINI) ===
+
+    console.log("5. Mengemas ulang PDF ke format biner...");
+    const pdfBytes = await pdfDoc.save();
+
+    console.log("6. MENGIRIM PDF KE LAPTOP! 🚀");
+    // INI BARIS PALING PENTING AGAR TIDAK MACET 2 MENIT:
+    res.setHeader('Content-Type', 'application/pdf');
+    return res.end(pdfBytes); 
+
   } catch (error) {
-    console.error("Terjadi error pada proses PDF:", error); // <-- Ini yang memicu log Anda tadi!
-    return res.status(500).json({ message: "Gagal cetak PDF" });
+    console.error("Terjadi error pada proses PDF:", error);
+    return res.status(500).json({ message: "Gagal cetak PDF", error: error.message });
   }
 });
 

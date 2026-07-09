@@ -237,6 +237,10 @@ app.post('/api/cetak-khs', async (req, res) => {
   }
 });
 
+// Rute penyambut untuk halaman utama browser
+app.get('/', (req, res) => {
+  res.status(200).send('<h1>Server Backend KHS Aktif!</h1>');
+});
 // ==========================================
 // RUTE 2: UNTUK WEBHOOK PLANNING CENTER (HANYA UPDATE MONGODB)
 // ==========================================
